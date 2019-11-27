@@ -50,7 +50,6 @@ commentForm.addEventListener('submit', function(event) {
   Array.from(event.target.children).forEach(function (input) {
     if (input.name) {
       commentData[input.name] = input.value
-      //console.log(input.clear())
     } 
   });
   fetch('https://randopic.herokuapp.com/comments', {
@@ -74,7 +73,24 @@ commentForm.addEventListener('submit', function(event) {
 //function to render comments - existing and new
 function renderComment(comment) {
   let commentHTML = `
-    <li>${comment.content}</li>
+    <div>
+    <li>${comment.content}</li><button class="delete-button" id=${comment.id}>Delete</button>
+    </div>
   `
   commentsList.insertAdjacentHTML('beforeend', commentHTML)
 };
+
+//deleting comments in frontend & backend
+commentsList.addEventListener('click', function(event) {
+  if (event.target.className === "delete-button") {
+    let buttonId = document.getElementById(`${event.target.id}`)
+    fetch(`https://randopic.herokuapp.com/comments/${buttonId.id}`, {
+    method: 'DELETE',
+    })
+    .then(response => response.json())
+    .then(data => {
+      buttonId.closest('div').remove()
+    })
+    .catch(err => err.message) 
+   }
+});
