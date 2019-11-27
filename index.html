@@ -11,6 +11,13 @@
     input {
       font-size: 2rem;
     }
+    li {
+      list-style: none;
+      list-style-position:inside;
+      border: 1px solid gray;
+      text-align: center;
+    }
+    
   </style>
 </head>
 
@@ -28,7 +35,7 @@
           <form id="comment_form">
             <input id="comment_input" type="text" name="comment" placeholder="Add Comment"/>
             <input id="submit" type="submit" value="Submit"/>
-          </form>
+          </form><br>
           <ul id="comments">
                <!-- <li> for each comment goes here -->
           </ul>

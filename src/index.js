@@ -53,22 +53,16 @@ document.addEventListener('DOMContentLoaded', () => {
       let comment = jsonData;
       let liComment = document.createElement('li');
       liComment.id = `${comment.id}comment`
-      let deleteOption = document.createElement('button');
-      deleteOption.id = "delete";
-      deleteOption.textContent = "Delete Comment";
       liComment.textContent = comment.content;
-      liComment.appendChild(deleteOption);
+      liComment.innerHTML += `<br><button id="delete">Delete Comment</button>`
       commentUL.appendChild(liComment); 
     }
     else{
     jsonData.forEach(function(comment){
       let liComment = document.createElement('li');
       liComment.id = `${comment.id}comment`;
-      let deleteOption = document.createElement('button');
-      deleteOption.id = "delete";
-      deleteOption.textContent = "Delete Comment";
       liComment.textContent = comment.content;
-      liComment.appendChild(deleteOption);
+      liComment.innerHTML += `<br><button id="delete">Delete Comment</button>`
       commentUL.appendChild(liComment); 
     })
     }
