@@ -1,12 +1,10 @@
 document.addEventListener('DOMContentLoaded', () => {
-  console.log('%c DOM Content Loaded and Parsed!', 'color: magenta')
-
-  const imageNameDiv = document.querySelector('#name')
-  const imageDiv = document.querySelector('#image')
-  const likesCounter = document.querySelector('#likes')
-  const likeButton = document.querySelector('#like_button')
-  const commentForm = document.querySelector('#comment_form')
-  const commentsList = document.querySelector('#comments')
+  const imageNameDiv = document.querySelector('#name'),
+       imageDiv = document.querySelector('#image'),
+       likesCounter = document.querySelector('#likes'),
+       likeButton = document.querySelector('#like_button'),
+       commentForm = document.querySelector('#comment_form'),
+       commentsList = document.querySelector('#comments')
   let imageId = 4050 //Entered the id from the fetched image here
 
   const imageURL = `https://randopic.herokuapp.com/images/${imageId}`
@@ -19,7 +17,10 @@ document.addEventListener('DOMContentLoaded', () => {
     fetch(imageURL)
       .then(resp => resp.json())
       .then(function(data) {
-        renderImage(data);
+        renderImage(data)
+      })
+      .catch(function(error) {
+        alert(error)
       })
   }
 
@@ -34,9 +35,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function generateCommentHTML(commentData) {
     const commentHTML = `
-      <li data-comment-id="${commentData.id}">
-        ${commentData.content}
-      </li>
+      <li data-comment-id="${commentData.id}">${commentData.content} <button class="delete_button btn btn-sm btn-danger">Delete</button></li>
     `
     return commentHTML
   }
@@ -62,6 +61,9 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     }
     fetch(likeURL, likeObj)
+      .catch(function(error) {
+        alert(error)
+      })
       // optimistic rendering, so not doing anything with response.
   }
 
@@ -72,14 +74,18 @@ document.addEventListener('DOMContentLoaded', () => {
   function addComment(e) {
     e.preventDefault()
     const commentText = e.target.querySelector('#comment_input').value
-    const commentHTML = `
-        <li>
-          ${commentText}
-        </li>
-    `
-    commentsList.insertAdjacentHTML('beforeend', commentHTML) //optimistic rendering
-    commentForm.reset()
-    addCommentToBackend(commentText)
+    // changing to pesimistic rendering for the bonus
+    // const commentHTML = `
+    //     <li>
+    //       ${commentText}
+    //     </li>
+    // `
+    // commentsList.insertAdjacentHTML('beforeend', commentHTML) //optimistic rendering
+    if (commentText === "") {
+      alert("You cannot submit an empty comment!")
+    } else {
+      addCommentToBackend(commentText)
+    }
   }
 
   function addCommentToBackend(commentText) {
@@ -95,11 +101,60 @@ document.addEventListener('DOMContentLoaded', () => {
       })
     }
     fetch(commentsURL, commentObj)
-      // optimistic rendering, so not doing anything with response.
+      .then(resp => {
+        if (resp.status >= 200 && resp.status < 300) {
+          return resp.json()
+        } else {
+          let err = new Error(resp.statusText)
+          err.response = resp
+          throw err
+        }
+      })
+      .then(function(data) {
+        commentsList.insertAdjacentHTML('beforeend', generateCommentHTML(data))
+        commentForm.reset()
+      })
+      .catch(function(error) {
+        alert(error)
+      })
+      // changed to pessimistic rendering
+  }
+
+  function deleteButtonListener() {
+    commentsList.addEventListener('click', function(e) {
+      if (e.target.classList.contains('delete_button')) {
+        let result = confirm("Are you sure you want to delete this comment?")
+        if (result) {
+          deleteComment(parseInt(e.target.closest('li').dataset.commentId))
+        }
+      }
+    })
+  }
+
+  function deleteComment(commentId) {
+    const commentObj = {
+      method: "DELETE"
+    }
+
+    fetch(commentsURL + `${commentId}`, commentObj)
+    .then(resp => resp.json())
+    .then(function(data) {
+      if (data.message === 'Comment Successfully Destroyed') {
+        const deletedComment = commentsList.querySelector(`[data-comment-id="${commentId}"]`)
+        deletedComment.remove()
+      } else {
+        alert(data.message)
+      }
+    })
+    .catch(function(error) {
+      alert(error)
+    })
+
   }
   
   fetchImage()
   likeButtonListener()
   commentFormListener()
+  deleteButtonListener()
 
 })
