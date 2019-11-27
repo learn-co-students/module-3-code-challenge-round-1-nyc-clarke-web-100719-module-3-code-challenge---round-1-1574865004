@@ -4,11 +4,11 @@ const likeURL = `https://randopic.herokuapp.com/likes/`
 const commentsURL = `https://randopic.herokuapp.com/comments/`
 
 
-let comments
-let likesCount = 0
-let spanLikes
+let comments, spanLikes
 const imageCard = document.getElementById('image_card')
-function getImage(){
+
+// function: fetch image and render page
+function getImage(){ 
     fetch(imageURL)
       .then(res => res.json())
       .then(json =>{
@@ -20,13 +20,13 @@ function getImage(){
 }
 
 const renderPage = obj =>{
-  likesCount = obj.like_count
-  const imagHTML = `<img src=${obj.url} id="image" data-id=${obj.id}/>
+  const imagHTML = `<img  style="padding: 20px;" src=${obj.url} id="image" data-id=${obj.id}/>
   <h4 id="name">${obj.name}</h4>
   <span>Likes:
-  <span id="likes">${likesCount}</span>
+  <span id="likes">${obj.like_count}</span>
   </span>
   <button id="like_button" data-img-id=${obj.id}>Like</button>
+  <hr>
   <form id="comment_form" data-img=${obj.id}>
     <input id="comment_input" type="text" name="comment" placeholder="Add Comment"/>
     <input type="submit" value="Submit"/>
@@ -38,23 +38,25 @@ const renderPage = obj =>{
 }
 
 const renderComment = comment =>{
-    const cmHTML = `<li data-comment-id=${comment.id}> ${comment.content} </li>`
+    const cmHTML = `<li style="padding: 5px 5px;" data-comment-id=${comment.id}> ${comment.content} <button style="padding: 5px 5px;" class="trash" data-comment-id=${comment.id}>🗑</button></li>`
     comments.innerHTML += cmHTML
 }
 
 imageCard.addEventListener('click', e =>{
   e.preventDefault()
-  console.log(e.target)
-  if(e.target.id === "like_button"){ // check if like_button
+  const comment = document.getElementById('comment_input')
+    if(e.target.id === "like_button"){ // check if like_button
     updateLikes() // optimi.. approach
     persistLike()
-  }
-  else if(e.target.value === "Submit"){
-    const comment = document.getElementById('comment_input')
-    optCommentRender(comment.value)
-    persistComment(comment.value)
-    comment.parentNode.reset()
-  }
+    }
+    else if(e.target.value === "Submit" && comment.value !== ""){
+      //optCommentRender(comment.value) // previously used for optimistic approach
+      persistComment(comment.value)
+      comment.parentNode.reset()
+    }
+    else if(e.target.className == "trash"){
+      DeleteComment(e.target.dataset.commentId)
+    }
 })
 
 const updateLikes = () =>{
@@ -72,7 +74,7 @@ const persistLike = () =>{
       image_id: imageId
     })})   // optim.. approach
 }
-
+// previosly used for new comment rendering
 const optCommentRender = comment =>{
   const cmHTML = `<li> ${comment} </li>`
     comments.innerHTML += cmHTML
@@ -88,7 +90,33 @@ const persistComment = (commentContent) => {
     body: JSON.stringify({
       image_id: imageId,
       content: commentContent
-    })})   // optim.. approach
+    })})   // prev - optmistic app => present - pessimistic
+    .then(res => res.json())
+    .then(json =>{
+          renderComment(json)
+    })
+    .catch(err =>{
+      alert(err)
+    })
 }
-//
+
+  function DeleteComment(cmID){
+    fetch(commentsURL + `${cmID}` ,{
+      method: 'DELETE',
+      headers:{
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      }
+    })   // pessimistic app
+      .then(res => res.json())
+      .then(json =>{
+            removeComment(cmID)
+      })
+  }
+
+  const removeComment = id =>{
+    document.querySelector(`li[data-comment-id="${id}"`).remove()
+  }
+  
+// Calling function to load page
 getImage()
