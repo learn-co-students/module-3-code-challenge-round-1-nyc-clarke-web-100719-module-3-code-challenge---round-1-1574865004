@@ -74,7 +74,12 @@ fetch(imageURL)
         content: event.target[0].value
       })
     })
-   
+     .then(function(response) {
+       return response.json();
+     })
+     .then(function(data) {
+       listComments(data);
+     })
    })
 
   function updateComments(event) {
